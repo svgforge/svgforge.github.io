@@ -1,0 +1,445 @@
+---
+import Nav from "../components/Navigation.astro";
+
+interface Props {
+	title: string;
+	description?: string;
+}
+
+const { title, description } = Astro.props;
+const pageTitle = title.startsWith("svgforge") ? title : `${title} — svgforge`;
+const siteUrl = new URL(Astro.url.pathname, Astro.site);
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={description} />
+		<title>{pageTitle}</title>
+		<link rel="canonical" href={siteUrl} />
+		<link rel="preload" href="/fonts/Cabin-VF.woff2" as="font" type="font/woff2" crossorigin />
+		<link rel="preload" href="/fonts/Cabin-Italic-VF.woff2" as="font" type="font/woff2" crossorigin />
+		<meta property="og:site_name" content="svgforge" />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={pageTitle} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={siteUrl} />
+		<meta name="twitter:card" content="summary" />
+		<meta name="twitter:title" content={pageTitle} />
+		<meta name="twitter:description" content={description} />
+		<style is:global>
+			@font-face {
+				font-family: "Cabin";
+				src: url("/fonts/Cabin-VF.woff2") format("woff2"),
+					url("/fonts/Cabin-VF.ttf") format("truetype-variations");
+				font-weight: 400 700;
+				font-style: normal;
+				font-display: swap;
+			}
+			@font-face {
+				font-family: "Cabin";
+				src: url("/fonts/Cabin-Italic-VF.woff2") format("woff2"),
+					url("/fonts/Cabin-Italic-VF.ttf") format("truetype-variations");
+				font-weight: 400 700;
+				font-style: italic;
+				font-display: swap;
+			}
+			:root {
+				color-scheme: light dark;
+				/* Palette (OKLCH) — anpassbar an einer Stelle */
+				--accent: oklch(0.6 0.15 225);
+				--accent-strong: oklch(0.5 0.13 225);
+				--accent-soft: oklch(0.8 0.12 225);
+				--surface: light-dark(oklch(1 0 0), oklch(0.205 0 0));
+				--surface-raised: light-dark(oklch(0.974 0.003 264.5), oklch(0.164 0 0));
+				--surface-code: light-dark(oklch(0.959 0.005 264.5), oklch(0.239 0 0));
+				--ink-on-accent: oklch(1 0 0);
+				--text: light-dark(oklch(0.218 0 0), oklch(0.961 0 0));
+				--muted: light-dark(oklch(0.551 0.027 264.4), oklch(0.708 0.003 247.9));
+				--faint: light-dark(oklch(0.56 0.02 261.3), oklch(0.7 0.02 261.3));
+				--hairline: light-dark(oklch(0.928 0.006 264.5), oklch(0.269 0.007 34.3));
+				--accent-alpha: light-dark(
+					oklch(0.6 0.15 225),
+					oklch(0.8 0.12 225)
+				);
+				--accent-ink: light-dark(var(--accent-strong), var(--accent-soft));
+				font-family: "Cabin", system-ui, -apple-system, "Segoe UI", sans-serif;
+				font-size: 17px;
+				line-height: 1.65;
+				background: var(--surface);
+			}
+			@media (min-width: 1024px) {
+				:root { font-size: 18px; }
+			}
+			:focus-visible {
+				outline: 2px solid var(--accent-alpha);
+				outline-offset: 2px;
+			}
+			.skip-link {
+				position: absolute;
+				top: 0;
+				left: -9999px;
+				z-index: 100;
+				padding: 0.5rem 1rem;
+				color: var(--text);
+				background: var(--surface);
+				border: 2px solid var(--accent-alpha);
+				border-radius: 0 0 8px 8px;
+				text-decoration: none;
+			}
+			.skip-link:focus-visible {
+				left: 0;
+			}
+			body {
+				max-width: 42rem;
+				margin: 0 auto;
+				padding: 2rem 1.5rem 4rem;
+			}
+			::selection {
+				background: var(--accent-alpha);
+				color: var(--ink-on-accent);
+			}
+			h1, h2, h3, h4, p, ul, ol, pre {
+				margin-top: 0;
+			}
+			h1 {
+				font-size: 2rem;
+				font-weight: 650;
+				letter-spacing: -0.02em;
+				line-height: 1.2;
+			}
+			h2 {
+				font-size: 1.35rem;
+				font-weight: 650;
+				letter-spacing: -0.01em;
+				line-height: 1.3;
+			}
+			h3 {
+				font-size: 1.15rem;
+				font-weight: 600;
+			}
+			a {
+				color: var(--text);
+				-webkit-tap-highlight-color: transparent;
+			}
+			main a {
+				text-decoration-color: var(--faint);
+				text-underline-offset: 3px;
+			}
+			main a:hover {
+				text-decoration-color: var(--accent-alpha);
+			}
+			header.site-header {
+				display: flex;
+				flex-direction: column;
+				gap: 1.5rem;
+				padding-bottom: 2rem;
+				border-bottom: 1px solid var(--hairline);
+			}
+			header.site-header h1 {
+				margin-bottom: 0;
+			}
+			header.site-header .site-header__desc {
+				margin: 0;
+				color: var(--muted);
+				font-size: 1.05rem;
+				max-width: 34rem;
+			}
+			main {
+				margin-top: 2rem;
+			}
+			footer {
+				margin-top: 4rem;
+				padding-top: 1.5rem;
+				border-top: 1px solid var(--hairline);
+				color: var(--faint);
+				font-size: 0.8rem;
+			}
+			footer a {
+				color: var(--muted);
+				text-decoration: none;
+			}
+			footer a:hover {
+				color: var(--accent-alpha);
+			}
+
+			/* Blog listing */
+			.post {
+				padding: 1.6rem 0;
+				border-bottom: 1px solid var(--hairline);
+			}
+			.post:first-of-type {
+				padding-top: 0.4rem;
+			}
+			.post:last-of-type {
+				border-bottom: 0;
+			}
+			.post__meta time {
+				font-size: 0.8rem;
+				letter-spacing: 0.02em;
+				text-transform: uppercase;
+				color: var(--faint);
+			}
+			.post__title {
+				margin: 0.35rem 0 0.4rem;
+			}
+			.post__title a {
+				text-decoration: none;
+			}
+			.post__title a:hover {
+				color: var(--accent-alpha);
+				text-decoration: underline;
+			}
+			.post__desc {
+				margin: 0 0 0.7rem;
+				color: var(--muted);
+			}
+			.post__tags {
+				margin: 0;
+			}
+			.tag {
+				display: inline-block;
+				margin: 0.15rem 0.4rem 0.15rem 0;
+				padding: 0.1rem 0.55rem;
+				font-size: 0.78rem;
+				font-weight: 500;
+				color: var(--muted);
+				text-decoration: none;
+				border: 1px solid var(--hairline);
+				border-radius: 99px;
+				transition: border-color 120ms ease, color 120ms ease;
+			}
+			.tag:hover {
+				color: var(--accent-alpha);
+				border-color: var(--accent-alpha);
+			}
+
+			/* Pagination */
+			nav[aria-label="Pagination"] {
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+				margin-top: 2.5rem;
+				font-size: 0.9rem;
+				color: var(--muted);
+			}
+			nav[aria-label="Pagination"] a {
+				font-weight: 600;
+				text-decoration: none;
+			}
+			nav[aria-label="Pagination"] a:hover {
+				color: var(--accent-alpha);
+			}
+			nav[aria-label="Pagination"] span {
+				flex: 1;
+				text-align: center;
+				color: var(--faint);
+			}
+
+			/* Browse by tag row */
+			.browse-tags {
+				margin-top: 2rem;
+				padding-top: 1.25rem;
+				border-top: 1px solid var(--hairline);
+				font-size: 0.85rem;
+				color: var(--muted);
+			}
+			.browse-tags .browse-tags__label {
+				display: block;
+				margin-bottom: 0.5rem;
+				font-weight: 600;
+				color: var(--text);
+			}
+
+			/* Article page */
+			.meta-line {
+				display: flex;
+				align-items: baseline;
+				gap: 0.5rem;
+				margin: 0 0 1.5rem;
+				font-size: 0.85rem;
+				color: var(--muted);
+			}
+			.meta-line .updated {
+				color: var(--faint);
+			}
+			.prose {
+				font-size: 1rem;
+			}
+			.prose > :first-child {
+				margin-top: 0;
+			}
+			.prose > :last-child {
+				margin-bottom: 0;
+			}
+			.prose :is(h2, h3) {
+				margin-top: 2.2rem;
+			}
+			.prose p, .prose ul, .prose ol {
+				margin-bottom: 1.2rem;
+				color: var(--text);
+			}
+			.prose ul, .prose ol {
+				padding-left: 1.3rem;
+			}
+			.prose li {
+				margin: 0.35rem 0;
+			}
+			.prose code {
+				font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+				font-size: 0.85em;
+				padding: 0.1em 0.35em;
+				border-radius: 5px;
+				background: var(--hairline);
+			}
+			.prose pre {
+				padding: 1rem 1.15rem;
+				margin-bottom: 1.4rem;
+				overflow-x: auto;
+				border-radius: 10px;
+				background: var(--surface-raised);
+				border: 1px solid var(--hairline);
+				line-height: 1.55;
+				tab-size: 2;
+				position: relative;
+			}
+			.prose pre code {
+				padding: 0;
+				background: none;
+				font-size: 0.82rem;
+			}
+			.prose blockquote {
+				margin: 1.5rem 0;
+				padding: 0.1rem 0 0.1rem 1.2rem;
+				border-left: 3px solid var(--accent-alpha);
+				color: var(--muted);
+			}
+			.prose hr {
+				border: none;
+				border-top: 1px solid var(--hairline);
+				margin: 2rem 0;
+			}
+			.prose table {
+				display: block;
+				width: 100%;
+				overflow-x: auto;
+				border-collapse: collapse;
+				margin-bottom: 1.4rem;
+				font-size: 0.92rem;
+			}
+			.prose thead {
+				border-bottom: 2px solid var(--hairline);
+			}
+			.prose th,
+			.prose td {
+				padding: 0.5rem 0.75rem;
+				text-align: left;
+				border: 1px solid var(--hairline);
+				overflow-wrap: break-word;
+			}
+			.prose th {
+				background: var(--surface-raised);
+				font-weight: 600;
+				color: var(--text);
+			}
+			.prose td {
+				color: var(--text);
+			}
+			.prose tbody tr:not(:last-child) {
+				border-bottom: 1px solid var(--hairline);
+			}
+			.prose pre > .copy-button {
+				position: absolute;
+				top: 0.5rem;
+				right: 0.5rem;
+				padding: 0.2rem 0.6rem;
+				border: 1px solid var(--hairline);
+				border-radius: 6px;
+				background: var(--surface);
+				color: var(--muted);
+				font-size: 0.72rem;
+				font-family: system-ui, sans-serif;
+				cursor: pointer;
+				transition: border-color 120ms ease, color 120ms ease;
+			}
+			.prose pre > .copy-button:hover {
+				border-color: var(--accent-alpha);
+				color: var(--accent-alpha);
+			}
+			.prose pre > .copy-button.copied {
+				border-color: var(--accent-alpha);
+				color: var(--accent-alpha);
+			}
+			.article-footer {
+				margin-top: 2.5rem;
+				padding-top: 1.25rem;
+				border-top: 1px solid var(--hairline);
+			}
+			.article-footer a {
+				font-weight: 600;
+				text-decoration: none;
+			}
+			.article-footer a:hover {
+				color: var(--accent-alpha);
+			}
+			a.back {
+				font-size: 0.9rem;
+				font-weight: 600;
+				text-decoration: none;
+			}
+			a.back:hover {
+				color: var(--accent-alpha);
+			}
+		</style>
+	</head>
+	<body>
+		<a class="skip-link" href="#main">Skip to content</a>
+		<header class="site-header">
+			<Nav />
+			{description && <p class="site-header__desc">{description}</p>}
+		</header>
+
+		<main id="main">
+			<slot />
+		</main>
+
+		<footer>
+			<p>© {new Date().getFullYear()} <a href="https://github.com/joeda1">Felix Müller</a></p>
+		</footer>
+	</body>
+
+	<script>
+		const copyText = (text: string) => navigator.clipboard.writeText(text);
+
+		const enhanceCodeBlocks = () => {
+			const blocks = document.querySelectorAll<HTMLPreElement>(".prose pre");
+
+			for (const block of blocks) {
+				if (block.querySelector(".copy-button")) continue;
+
+				const button = document.createElement("button");
+				button.type = "button";
+				button.className = "copy-button";
+				button.textContent = "Copy";
+				button.setAttribute("aria-label", "Copy code to clipboard");
+				block.appendChild(button);
+
+				button.addEventListener("click", async () => {
+					const code = block.textContent ?? "";
+					await copyText(code);
+					button.textContent = "Copied";
+					button.classList.add("copied");
+					window.setTimeout(() => {
+						button.textContent = "Copy";
+						button.classList.remove("copied");
+					}, 2000);
+				});
+			}
+		};
+
+		enhanceCodeBlocks();
+	</script>
+</html>

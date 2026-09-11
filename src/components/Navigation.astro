@@ -1,0 +1,134 @@
+---
+const links = [
+	{ href: "/", label: "Home" },
+	{ href: "/blog", label: "Blog" },
+	{ href: "/releases", label: "Releases" },
+];
+
+const current = Astro.url.pathname;
+const isActive = (href: string) =>
+	href === "/"
+		? current === "/"
+		: current === href || current.startsWith(`${href}/`);
+---
+
+<nav class="nav" aria-label="Hauptnavigation">
+	<a href="/" class="nav__brand">svgforge</a>
+	<button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Menü">
+		<span class="nav__toggle-bar"></span>
+		<span class="nav__toggle-bar"></span>
+		<span class="nav__toggle-bar"></span>
+	</button>
+	<ul class="nav__links" id="nav-links">
+		{links.map((link) => (
+			<li>
+				<a
+					class:list={["nav__link", { "is-active": isActive(link.href) }]}
+					href={link.href}
+					aria-current={isActive(link.href) ? "page" : undefined}
+				>
+					{link.label}
+				</a>
+			</li>
+		))}
+	</ul>
+</nav>
+
+<style>
+	.nav {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 2rem;
+	}
+	.nav__brand {
+		margin: 0;
+		padding-right: 2rem;
+		border-right: 1px solid var(--hairline);
+		font-size: 1.6rem;
+		font-weight: 700;
+		letter-spacing: -0.03em;
+		line-height: 1.1;
+		text-decoration: none;
+		color: var(--text);
+	}
+	.nav__brand:hover {
+		color: var(--accent-alpha);
+	}
+	.nav__toggle {
+		display: none;
+		padding: 0;
+		border: 0;
+		background: none;
+		cursor: pointer;
+		color: inherit;
+	}
+	.nav__toggle-bar {
+		display: block;
+		width: 24px;
+		height: 2px;
+		background: currentColor;
+	}
+	.nav__toggle-bar + .nav__toggle-bar {
+		margin-top: 5px;
+	}
+	.nav__links {
+		display: flex;
+		flex-direction: row;
+		gap: 1.5rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.nav__links li {
+		padding: 0;
+		border: 0;
+	}
+	.nav__link {
+		font-weight: 600;
+		text-decoration: none;
+	}
+	.nav__link:hover,
+	.nav__link.is-active {
+		text-decoration: underline;
+		text-decoration-color: var(--accent-alpha);
+		text-underline-offset: 8px;
+		text-decoration-thickness: 3px;
+	}
+
+	@media (max-width: 1024px) {
+		.nav__toggle {
+			display: inline-block;
+		}
+		.nav__links {
+			display: none;
+			position: absolute;
+			top: calc(100% + 0.5rem);
+			right: 0;
+			flex-direction: column;
+			gap: 0;
+			min-width: 10rem;
+			padding: 0.5rem;
+			border: 1px solid color-mix(in oklab, var(--faint) 35%, transparent);
+			border-radius: 8px;
+			background: canvas;
+			box-shadow: 0 4px 12px oklch(0 0 0 / 0.2);
+		}
+		.nav__links.is-open {
+			display: flex;
+		}
+	}
+</style>
+
+<script>
+	const toggle = document.querySelector<HTMLElement>('.nav__toggle');
+	const links = document.querySelector<HTMLElement>('.nav__links');
+
+	if (toggle && links) {
+		toggle.addEventListener('click', () => {
+			const open = links.classList.toggle('is-open');
+			toggle.setAttribute('aria-expanded', String(open));
+		});
+	}
+</script>
