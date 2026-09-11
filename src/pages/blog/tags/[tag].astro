@@ -1,0 +1,70 @@
+---
+import { getCollection } from "astro:content";
+import JsonLd from "../../../components/JsonLd.astro";
+import SiteLayout from "../../../layouts/SiteLayout.astro";
+import { getExcerpt } from "../../../lib/excerpt";
+import { siteUrl } from "../../../lib/seo";
+
+export async function getStaticPaths() {
+	const posts = await getCollection("blog", ({ data }) =>
+		import.meta.env.PROD ? data.draft !== true : true,
+	);
+	const tags = [...new Set(posts.flatMap((post) => post.data.tags))].sort();
+	return tags.map((tag) => ({ params: { tag } }));
+}
+
+const { tag } = Astro.params;
+
+const posts = (
+	await getCollection("blog", ({ data }) =>
+		import.meta.env.PROD ? data.draft !== true : data.tags.includes(tag),
+	)
+).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const title = `Tag: ${tag}`;
+const tagUrl = siteUrl(`/blog/tags/${tag}/`);
+
+const jsonLd = {
+	"@context": "https://schema.org",
+	"@type": "CollectionPage",
+	"@id": tagUrl,
+	name: title,
+	url: tagUrl,
+	description: `All blog posts tagged with "${tag}".`,
+	inLanguage: "en",
+	mainEntity: {
+		"@type": "ItemList",
+		itemListElement: posts.map((post, index) => ({
+			"@type": "ListItem",
+			position: index + 1,
+			name: post.data.title,
+			url: siteUrl(`/blog/posts/${post.id}/`),
+		})),
+	},
+};
+---
+
+<SiteLayout title={title} description={`All blog posts tagged with "${tag}".`}>
+	<JsonLd data={jsonLd} />
+	<h1>{title}</h1>
+	{posts.length > 0 ? (
+		posts.map((post) => {
+				const excerpt = getExcerpt(post);
+				return (
+					<article class="post">
+						<div class="post__meta">
+							<time datetime={post.data.pubDate.toISOString()}>
+								{post.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+							</time>
+						</div>
+						<h2 class="post__title"><a href={`/blog/posts/${post.id}`}>{post.data.title}</a></h2>
+						{excerpt && <p class="post__desc">{excerpt}</p>}
+					</article>
+				);
+			})
+	) : (
+		<p>No posts found for this tag.</p>
+	)}
+
+	<p><a class="back" href="/blog/tags">All tags</a> · <a class="back" href="/blog">Back to the blog</a></p>
+</SiteLayout>

@@ -1,0 +1,83 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getCollection, render } from "astro:content";
+import JsonLd from "../../../components/JsonLd.astro";
+import SiteLayout from "../../../layouts/SiteLayout.astro";
+import { getExcerpt } from "../../../lib/excerpt";
+import { breadcrumbList, SITE_AUTHOR, siteUrl } from "../../../lib/seo";
+
+export async function getStaticPaths() {
+	const posts = await getCollection("blog", ({ data }) =>
+		import.meta.env.PROD ? data.draft !== true : true,
+	);
+	return posts.map((post) => ({
+		params: { id: post.id },
+		props: { post },
+	}));
+}
+
+interface Props {
+	post: CollectionEntry<"blog">;
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+const date = post.data.updatedDate ?? post.data.pubDate;
+const description = post.data.description || getExcerpt(post);
+const canonical = siteUrl(`/blog/posts/${post.id}/`);
+
+const jsonLd = [
+	{
+		"@context": "https://schema.org",
+		"@type": "BlogPosting",
+		"@id": canonical,
+		mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
+		headline: post.data.title,
+		description,
+		datePublished: post.data.pubDate.toISOString(),
+		dateModified: (post.data.updatedDate ?? post.data.pubDate).toISOString(),
+		keywords: post.data.tags.join(", "),
+		inLanguage: "en",
+		author: SITE_AUTHOR,
+		publisher: {
+			"@type": "Organization",
+			name: "svgforge",
+			url: siteUrl(),
+		},
+	},
+	breadcrumbList([
+		{ name: "Home", path: "/" },
+		{ name: "Blog", path: "/blog/" },
+		{ name: post.data.title, path: `/blog/posts/${post.id}/` },
+	]),
+];
+---
+
+<SiteLayout title={post.data.title} description={description}>
+	<JsonLd data={jsonLd} />
+	<h1>{post.data.title}</h1>
+	<div class="meta-line">
+		<time datetime={date.toISOString()}>
+			{date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+		</time>
+		{post.data.updatedDate && (
+			<span class="updated">· Updated</span>
+		)}
+	</div>
+
+	<div class="prose">
+		<Content />
+	</div>
+
+	<div class="article-footer">
+		{post.data.tags.length > 0 && (
+			<p>
+				{post.data.tags.map((tag) => (
+					<a class="tag" href={`/blog/tags/${tag}`}>#{tag}</a>
+				))}
+			</p>
+		)}
+		<a class="back" href="/blog">← Back to the blog</a>
+	</div>
+</SiteLayout>

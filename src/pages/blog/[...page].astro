@@ -1,0 +1,111 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getCollection } from "astro:content";
+import type { GetStaticPaths, Page } from "astro";
+import JsonLd from "../../components/JsonLd.astro";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { getExcerpt } from "../../lib/excerpt";
+import { breadcrumbList, siteUrl } from "../../lib/seo";
+
+export const getStaticPaths = (async ({ paginate }) => {
+	const POSTS_PER_PAGE = 5;
+	const posts = (
+		await getCollection("blog", ({ data }) =>
+			import.meta.env.PROD ? data.draft !== true : true,
+		)
+	).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+	return paginate(posts, { pageSize: POSTS_PER_PAGE });
+}) satisfies GetStaticPaths;
+
+interface Props {
+	page: Page<CollectionEntry<"blog">>;
+}
+
+const { page } = Astro.props;
+
+const allTags = [
+	...new Set(page.data.flatMap((post) => post.data.tags)),
+].sort();
+
+const blogTitle =
+	page.currentPage === 1 ? "Blog" : `Blog — page ${page.currentPage}`;
+const blogUrl = siteUrl(Astro.url.pathname);
+
+const jsonLd = [
+	{
+		"@context": "https://schema.org",
+		"@type": "CollectionPage",
+		"@id": blogUrl,
+		name: blogTitle,
+		url: blogUrl,
+		description: "News, tutorials and release notes around svgforge.",
+		inLanguage: "en",
+		mainEntity: {
+			"@type": "ItemList",
+			itemListElement: page.data.map((post, index) => ({
+				"@type": "ListItem",
+				position: (page.currentPage - 1) * 5 + index + 1,
+				name: post.data.title,
+				url: siteUrl(`/blog/posts/${post.id}/`),
+			})),
+		},
+	},
+	breadcrumbList(
+		page.currentPage === 1
+			? [
+					{ name: "Home", path: "/" },
+					{ name: "Blog", path: "/blog/" },
+				]
+			: [
+					{ name: "Home", path: "/" },
+					{ name: "Blog", path: "/blog/" },
+					{ name: `Page ${page.currentPage}`, path: Astro.url.pathname },
+				],
+	),
+];
+---
+
+<SiteLayout title={blogTitle} description="News, tutorials and release notes around svgforge.">
+	<JsonLd data={jsonLd} />
+	<h1>{blogTitle}</h1>
+	{page.data.length > 0 ? (
+		page.data.map((post) => {
+				const excerpt = getExcerpt(post);
+				return (
+					<article class="post">
+						<div class="post__meta">
+							<time datetime={post.data.pubDate.toISOString()}>
+								{post.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+							</time>
+						</div>
+						<h2 class="post__title"><a href={`/blog/posts/${post.id}`}>{post.data.title}</a></h2>
+						{excerpt && <p class="post__desc">{excerpt}</p>}
+						{post.data.tags.length > 0 && (
+							<p class="post__tags">
+								{post.data.tags.map((tag) => (
+									<a class="tag" href={`/blog/tags/${tag}`}>#{tag}</a>
+								))}
+							</p>
+						)}
+					</article>
+				);
+			})
+	) : (
+		<p>No posts yet.</p>
+	)}
+
+	{page.lastPage > 1 && (
+		<nav aria-label="Pagination">
+			{page.url.prev && <a href={page.url.prev}>← Newer posts</a>}
+			<span>Page {page.currentPage} of {page.lastPage}</span>
+			{page.url.next && <a href={page.url.next}>Older posts →</a>}
+		</nav>
+	)}
+
+	{allTags.length > 0 && (
+		<div class="browse-tags">
+			<span class="browse-tags__label">Browse by tag</span>
+			{allTags.map((tag) => <a class="tag" href={`/blog/tags/${tag}`}>#{tag}</a>)}
+		</div>
+	)}
+</SiteLayout>
