@@ -1,0 +1,53 @@
+---
+import { getCollection } from "astro:content";
+import JsonLd from "../../../components/JsonLd.astro";
+import SiteLayout from "../../../layouts/SiteLayout.astro";
+import { siteUrl } from "../../../lib/seo";
+
+const posts = await getCollection("blog", ({ data }) =>
+	import.meta.env.PROD ? data.draft !== true : true,
+);
+
+const tagCounts = new Map<string, number>();
+for (const post of posts) {
+	for (const tag of post.data.tags) {
+		tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+	}
+}
+const tags = [...tagCounts.entries()].sort(([a], [b]) => a.localeCompare(b));
+
+const jsonLd = {
+	"@context": "https://schema.org",
+	"@type": "CollectionPage",
+	"@id": siteUrl("/blog/tags/"),
+	name: "Blog Tags",
+	url: siteUrl("/blog/tags/"),
+	description: "All tags used on the svgforge blog.",
+	inLanguage: "en",
+	mainEntity: {
+		"@type": "ItemList",
+		itemListElement: tags.map(([tag], index) => ({
+			"@type": "ListItem",
+			position: index + 1,
+			name: tag,
+			url: siteUrl(`/blog/tags/${tag}/`),
+		})),
+	},
+};
+---
+
+<SiteLayout title="Blog Tags" description="All tags used on the svgforge blog.">
+	<JsonLd data={jsonLd} />
+	<h1>Blog Tags</h1>
+	{tags.length > 0 ? (
+		<p>
+			{tags.map(([tag, count]) => (
+				<a class="tag" href={`/blog/tags/${tag}`}>#{tag} ({count})</a>
+			))}
+		</p>
+	) : (
+		<p>No tags yet.</p>
+	)}
+
+	<p><a class="back" href="/blog">Back to the blog</a></p>
+</SiteLayout>

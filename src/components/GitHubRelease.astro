@@ -1,0 +1,165 @@
+---
+interface Props {
+	repo: string;
+	proxy?: string;
+}
+
+const { repo, proxy } = Astro.props;
+
+const [owner, name] = repo.split("/");
+const fallbackUrl = `https://github.com/${owner}/${name}/releases`;
+const apiUrl = `https://api.github.com/repos/${repo}/releases/latest`;
+const endpoint = proxy
+	? `${proxy}${proxy.includes("?") ? "&" : "?"}url=${encodeURIComponent(apiUrl)}`
+	: apiUrl;
+---
+
+<github-release class="release" repo={repo} endpoint={endpoint} data-repo={repo}>
+	<a class="release__version" href={fallbackUrl}>
+		<span class="release__version__tag">Loading…</span>
+	</a>
+	<span class="release__date">—</span>
+	<a class="release__notes" href={fallbackUrl}>Release notes ↗</a>
+</github-release>
+
+<style>
+	.release {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.6rem 0.75rem;
+		margin-top: 0.75rem;
+	}
+	.release__version {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.2rem 0.75rem;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--muted);
+		text-decoration: none;
+		border: 1px solid var(--hairline);
+		border-radius: 99px;
+	}
+	.release__version:hover {
+		border-color: var(--accent-alpha);
+	}
+	.release__version.is-loaded {
+		color: var(--accent-ink);
+		border-color: var(--accent-alpha);
+	}
+	.release__date {
+		font-size: 0.8rem;
+		color: var(--faint);
+	}
+	.release__notes {
+		font-size: 0.85rem;
+		font-weight: 500;
+		color: var(--muted);
+		text-decoration: none;
+	}
+	.release__notes:hover {
+		color: var(--accent-alpha);
+		text-decoration: underline;
+	}
+	.release.is-error .release__version__tag {
+		font-style: italic;
+		font-weight: 400;
+	}
+</style>
+
+<script>
+	interface ReleaseInfo {
+		tagName: string;
+		htmlUrl: string;
+		publishedAt: string | null;
+	}
+
+	const cache = new Map();
+
+	function workerFetch(endpoint: string): Promise<ReleaseInfo> {
+		return new Promise((resolve, reject) => {
+			if (typeof SharedWorker === 'undefined') {
+				reject(new Error('SharedWorker unsupported'));
+				return;
+			}
+			try {
+				const worker = new SharedWorker('/github-release-worker.js', { type: 'module' });
+				const timer = setTimeout(() => {
+					worker.port.close();
+					reject(new Error('timeout'));
+				}, 15000);
+
+				worker.port.onmessage = (event) => {
+					if (event.data.url !== endpoint) return;
+					clearTimeout(timer);
+					worker.port.close();
+					if (event.data.error) reject(new Error(event.data.error));
+					else resolve(event.data.data as ReleaseInfo);
+				};
+				worker.port.start();
+				worker.port.postMessage({ url: endpoint });
+			} catch (err) {
+				reject(err);
+			}
+		});
+	}
+
+	async function directFetch(endpoint: string): Promise<ReleaseInfo> {
+		let response = await fetch(endpoint);
+		if (response.status === 404 && !endpoint.includes('?') && endpoint.endsWith('/latest')) {
+			response = await fetch(endpoint.replace(/\/latest$/, '/releases?per_page=1'));
+		}
+		if (!response.ok) throw new Error('HTTP ' + response.status);
+		const data = await response.json();
+		const item = Array.isArray(data) ? data[0] : data;
+		if (!item || !item.tag_name) throw new Error('no release found');
+		return { tagName: item.tag_name, htmlUrl: item.html_url, publishedAt: item.published_at || null };
+	}
+
+	function fetchRelease(endpoint: string): Promise<ReleaseInfo> {
+		if (cache.has(endpoint)) return cache.get(endpoint);
+		const promise = workerFetch(endpoint).catch(() => directFetch(endpoint));
+		cache.set(endpoint, promise);
+		promise.catch(() => cache.delete(endpoint));
+		return promise;
+	}
+
+	function formatDate(value: string): string {
+		const date = new Date(value);
+		if (Number.isNaN(date.getTime())) return '';
+		return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+	}
+
+	class GitHubRelease extends HTMLElement {
+		connectedCallback() {
+			const endpoint = this.getAttribute('endpoint');
+			if (!endpoint || this.dataset.busy) return;
+			this.dataset.busy = 'true';
+
+			fetchRelease(endpoint)
+				.then(({ tagName, htmlUrl, publishedAt }: ReleaseInfo) => {
+					const version = this.querySelector<HTMLAnchorElement>('.release__version');
+					const tag = this.querySelector('.release__version__tag');
+					const date = this.querySelector('.release__date');
+					const notes = this.querySelector<HTMLAnchorElement>('.release__notes');
+					if (!version || !tag) return;
+					version.href = htmlUrl;
+					version.setAttribute('aria-label', `Latest release ${tagName}`);
+					tag.textContent = tagName;
+					version.classList.add('is-loaded');
+					if (date) date.textContent = publishedAt ? formatDate(publishedAt) : '';
+					if (notes) notes.href = htmlUrl;
+				})
+				.catch(() => {
+					const tag = this.querySelector('.release__version__tag');
+					if (tag) tag.textContent = 'unavailable';
+					this.classList.add('is-error');
+				});
+		}
+	}
+
+	customElements.define('github-release', GitHubRelease);
+</script>

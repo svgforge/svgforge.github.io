@@ -1,137 +1,169 @@
 ---
-const repos = [
-	{name: 'svgforge', url: 'https://github.com/svgforge/svgforge', description: 'Low-level Node.js module — takes a bunch of SVG files, optimizes and bakes them into SVG sprites'},
-	{name: 'svgforge-cli', url: 'https://github.com/svgforge/svgforge-cli', description: 'Command line interface for svgforge'},
+import JsonLd from "../components/JsonLd.astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import { SITE_AUTHOR, SITE_URL } from "../lib/seo";
+
+const description =
+	"A low-level Node.js module that takes a bunch of SVG files, optimizes them and bakes them into SVG sprites and stacks.";
+
+const jsonLd = [
+	{
+		"@context": "https://schema.org",
+		"@type": "WebSite",
+		name: "svgforge",
+		url: SITE_URL,
+		description,
+		inLanguage: "en",
+		author: SITE_AUTHOR,
+	},
+	{
+		"@context": "https://schema.org",
+		"@type": "SoftwareSourceCode",
+		name: "svgforge",
+		url: "https://github.com/svgforge/svgforge",
+		codeRepository: "https://github.com/svgforge/svgforge",
+		programmingLanguage: "JavaScript",
+		author: SITE_AUTHOR,
+	},
 ];
 
 const modes = [
-	{name: 'view', text: 'tiled sprites with pre-defined <code>&lt;view&gt;</code> elements, useful for foreground images via SVG fragment identifiers'},
-	{name: 'defs', text: 'inline sprites using the <code>&lt;defs&gt;</code> element'},
-	{name: 'symbol', text: 'inline sprites using the <code>&lt;symbol&gt;</code> element'},
-	{name: 'stack', text: 'SVG stacks — icons as <code>background-image</code> via <code>url(icon.svg#ID)</code>'},
+	{
+		name: "view",
+		text: "tiled sprites with pre-defined <code>&lt;view&gt;</code> elements, useful for foreground images via SVG fragment identifiers",
+	},
+	{
+		name: "defs",
+		text: "inline sprites using the <code>&lt;defs&gt;</code> element",
+	},
+	{
+		name: "symbol",
+		text: "inline sprites using the <code>&lt;symbol&gt;</code> element",
+	},
+	{
+		name: "stack",
+		text: "SVG stacks — icons as <code>background-image</code> via <code>url(icon.svg#ID)</code>",
+	},
 ];
 
-const cliDocs = 'https://github.com/svgforge/svgforge-cli/blob/main/docs/command-line.md';
-const apiDocs = 'https://github.com/svgforge/svgforge/blob/main/docs/api.md';
+const cliDocs =
+	"https://github.com/svgforge/svgforge-cli/blob/main/docs/command-line.md";
+const apiDocs = "https://github.com/svgforge/svgforge/blob/main/docs/api.md";
 
 const examples = [
-	{cmd: 'svgforge --view --view-example --dest=out assets/*.svg', text: 'Create a «view» sprite plus an example HTML document.'},
-	{cmd: 'svgforge --defs --defs-render-css --defs-example --dest=out assets/*.svg', text: 'Create a «defs» sprite with a CSS stylesheet and an example document.'},
-	{cmd: 'svgforge -S -p 10 assets/*.svg', text: 'Create a «stack» sprite with 10px padding around all shapes.'},
-	{cmd: "svgforge --config config.json 'assets/**/*.svg'", text: 'Use a config file and recursive globbing.'},
+	{
+		cmd: "svgforge --view --view-example --dest=out assets/*.svg",
+		text: "Create a «view» sprite plus an example HTML document.",
+	},
+	{
+		cmd: "svgforge --defs --defs-render-css --defs-example --dest=out assets/*.svg",
+		text: "Create a «defs» sprite with a CSS stylesheet and an example document.",
+	},
+	{
+		cmd: "svgforge -S -p 10 assets/*.svg",
+		text: "Create a «stack» sprite with 10px padding around all shapes.",
+	},
+	{
+		cmd: "svgforge --config config.json 'assets/**/*.svg'",
+		text: "Use a config file and recursive globbing.",
+	},
 ];
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/x-icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>svgforge — SVG Sprites &amp; Stacks</title>
-		<style>
-			:root {
-				color-scheme: light dark;
-				font-family: system-ui, -apple-system, sans-serif;
-			}
-			body {
-				max-width: 44rem;
-				margin: 0 auto;
-				padding: 3rem 1.5rem;
-				line-height: 1.6;
-			}
-			h1, h2 {
-				line-height: 1.2;
-			}
-			a {
-				color: inherit;
-			}
-			header p {
-				color: #888;
-			}
-			ul {
-				padding-left: 0;
-				list-style: none;
-			}
-			ul li {
-				padding: 0.75rem 0;
-				border-bottom: 1px solid #8884;
-			}
-			ul li a {
-				font-weight: 600;
-			}
-			ul li p, ul li :global(.desc) {
-				margin: 0.25rem 0 0;
-				color: #888;
-			}
-			pre {
-				padding: 1rem;
-				border-radius: 8px;
-				background: #8881;
-				overflow-x: auto;
-			}
-			pre code {
-				font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-			}
-			footer {
-				margin-top: 3rem;
-				color: #888;
-				font-size: 0.875rem;
-			}
-		</style>
-	</head>
-	<body>
-		<header>
-			<h1>svgforge</h1>
-			<p>A low-level Node.js module that takes a bunch of SVG files, optimizes them and bakes them into SVG sprites.</p>
-		</header>
+<SiteLayout
+	title="svgforge"
+	description={description}
+>
+	<JsonLd data={jsonLd} />
+	<h1 class="home-title">SVG sprites &amp; stacks</h1>
+	<section class="home-section">
+		<h2>Sprite modes</h2>
+		<ul class="home-list">
+			{modes.map((mode) => (
+				<li>
+					<strong>{mode.name}</strong>
+					<p set:html={mode.text} />
+				</li>
+			))}
+		</ul>
+	</section>
 
-		<main>
-			<section>
-				<h2>Sprite modes</h2>
-				<ul>
-					{modes.map((mode) => (
-						<li>
-							<strong>{mode.name}</strong>
-							<p class="desc" set:html={mode.text} />
-						</li>
-					))}
-				</ul>
-			</section>
+	<section class="home-section">
+		<h2>API</h2>
+		<p>
+			The <code>SVGSpriter</code> module is a low-level building block: register SVG
+			source files, compile, and write the resulting files yourself. See the{" "}
+			<a href={apiDocs}>full API documentation (markdown)</a> for details, or continue
+			below for the command line way.
+		</p>
+	</section>
 
-			<section>
-				<h2>API</h2>
-				<p>The <code>SVGSpriter</code> module is a low-level building block: register SVG source files, compile, and write the resulting files yourself. See the <a href={apiDocs}>full API documentation (markdown)</a> for details, or continue below for the command line way.</p>
-			</section>
+	<section class="home-section">
+		<h2>Command line</h2>
+		<p>Install the CLI globally, then use the <code>svgforge</code> command:</p>
+		<pre><code>npm install svgforge-cli -g</code></pre>
+		{examples.map((example) => (
+			<div class="home-example">
+				<pre><code>{example.cmd}</code></pre>
+				<p>{example.text}</p>
+			</div>
+		))}
+		<p><a href={cliDocs}>Full command line documentation (markdown)</a></p>
+	</section>
+</SiteLayout>
 
-			<section>
-				<h2>Command line</h2>
-				<p>Install the CLI globally, then use the <code>svgforge</code> command:</p>
-				<pre><code>npm install svgforge-cli -g</code></pre>
-				{examples.map((example) => (
-					<div>
-						<pre><code>{example.cmd}</code></pre>
-						<p>{example.text}</p>
-					</div>
-				))}
-				<p><a href={cliDocs}>Full command line documentation (markdown)</a></p>
-			</section>
-
-			<section>
-				<h2>Repositories</h2>
-				<ul>
-					{repos.map((repo) => (
-						<li>
-							<a href={repo.url}>{repo.name}</a>
-							<p>{repo.description}</p>
-						</li>
-					))}
-				</ul>
-			</section>
-		</main>
-
-		<footer>
-			<p>© {new Date().getFullYear()} <a href="https://github.com/joeda1">Felix Müller</a></p>
-		</footer>
-	</body>
-</html>
+<style>
+	.home-section {
+		margin-top: 2.5rem;
+	}
+	.home-title {
+		font-size: 2.4rem;
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		line-height: 1.15;
+	}
+	.home-section h2 {
+		margin-bottom: 0.6rem;
+	}
+	.home-list {
+		padding-left: 1.1rem;
+		list-style: disc;
+	}
+	.home-list li {
+		margin: 0.6rem 0;
+	}
+	.home-list li p {
+		margin: 0.15rem 0 0;
+		color: var(--muted);
+	}
+	.home-section code {
+		padding: 0.08rem 0.35rem;
+		border: 1px solid var(--hairline);
+		border-radius: 5px;
+		background: var(--surface-code);
+		font-size: 0.9em;
+	}
+	.home-section pre {
+		margin-bottom: 1.4rem;
+		padding: 0.85rem 1rem;
+		overflow-x: auto;
+		border: 1px solid var(--hairline);
+		border-radius: 10px;
+		background: var(--surface-raised);
+		line-height: 1.55;
+	}
+	.home-section pre code {
+		padding: 0;
+		border: 0;
+		background: none;
+		font-size: 0.82rem;
+	}
+	.home-example p {
+		margin: -0.7rem 0 1.4rem;
+		color: var(--muted);
+		font-size: 0.95rem;
+	}
+	.home-section > p:last-child {
+		margin-bottom: 0;
+	}
+</style>
