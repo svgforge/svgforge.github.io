@@ -38,6 +38,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Type check
+        run: pnpm check
+
+      - name: Lint
+        run: pnpm lint
+
       - name: Build site
         run: pnpm build
 
