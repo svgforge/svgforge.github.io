@@ -25,7 +25,7 @@ export async function GET() {
 		"- [svgforge-cli on GitHub](https://github.com/svgforge/svgforge-cli): Source code and command line documentation.",
 	];
 
-	return new Response(lines.join("\n") + "\n", {
+	return new Response(`${lines.join("\n")}\n`, {
 		headers: { "Content-Type": "text/plain; charset=utf-8" },
 	});
 }
