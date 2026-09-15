@@ -275,6 +275,10 @@ const siteUrl = new URL(Astro.url.pathname, Astro.site);
 			.prose > :last-child {
 				margin-bottom: 0;
 			}
+			.prose img {
+				width: 100%;
+				height: auto;
+			}
 			.prose :is(h2, h3) {
 				margin-top: 2.2rem;
 			}
