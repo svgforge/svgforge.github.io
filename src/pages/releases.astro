@@ -2,22 +2,31 @@
 import GitHubRelease from "../components/GitHubRelease.astro";
 import SiteLayout from "../layouts/SiteLayout.astro";
 
-const releases = [
-	{
-		repo: "svgforge/svgforge",
-		description:
-			"Low-level Node.js module — takes a bunch of SVG files, optimizes and bakes them into SVG sprites.",
-	},
-	{
-		repo: "svgforge/svgforge-cli",
-		description: "Command line interface for svgforge.",
-	},
-	{
-		repo: "svgforge/icon-library",
-		description:
-			"A Wordpress plugin for managing SVG icons. You can upload your generated SVG sprite and use it in Gutenberg editor.",
-	},
+const repos = [
+	"svgforge/svgforge",
+	"svgforge/svgforge-cli",
+	"svgforge/sf-icon-manager",
 ];
+
+async function getRepoDescription(repo: string): Promise<string> {
+	try {
+		const res = await fetch(`https://api.github.com/repos/${repo}`, {
+			headers: { Accept: "application/vnd.github.v3+json" },
+		});
+		if (!res.ok) return "";
+		const data: { description?: string | null } = await res.json();
+		return data.description ?? "";
+	} catch {
+		return "";
+	}
+}
+
+const releases = await Promise.all(
+	repos.map(async (repo) => ({
+		repo,
+		description: await getRepoDescription(repo),
+	})),
+);
 ---
 
 <SiteLayout title="Releases" description="Latest releases of the svgforge projects.">
@@ -29,7 +38,7 @@ const releases = [
 			<article class="post">
 				<div class="post__meta">{owner}</div>
 				<h2 class="post__title"><a href={repoUrl}>{name}</a></h2>
-				<p class="post__desc">{item.description}</p>
+				{item.description && <p class="post__desc">{item.description}</p>}
 				<GitHubRelease repo={item.repo} />
 			</article>
 		);
