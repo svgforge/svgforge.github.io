@@ -20,7 +20,7 @@ const service: LocalImageService = {
 		if (options.sizes) {
 			options.sizes = "(min-width: 768px) 768px, 100vw";
 		}
-		return baseService.validateOptions(options, imageConfig, logger);
+		return baseService.validateOptions?.(options, imageConfig, logger) ?? options;
 	},
 };
 
